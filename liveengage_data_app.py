@@ -121,22 +121,23 @@ class LiveEngageDataApp:
             print('\n\tAdded data from ' + name) 
         return data
 
+    # Returns a Dictionary
     def get_user_data(self):
         print('\nGetting user data...')
         if 'accountConfigReadOnly_users' not in self.services.keys():
             return 'No user data service found'
         return self._get_request_helper(self.services['accountConfigReadOnly_users'])
 
+    # Returns a Dictionary
     def get_skills_data(self):
         print('\nGetting skill data...')
         if 'accountConfigReadOnly_skills' not in self.services.keys():
-            data= 'No skill data service found'
-            return data
+            return 'No skill data service found'
         return self._get_request_helper(self.services['accountConfigReadOnly_skills'])
-    
+
+    # Returns a Dictionary   
     def get_agent_groups_data(self):
         print('\nGetting agent group data...')
         if 'accountConfigReadOnly_agentGroups' not in self.services.keys():
-            data= 'No agent groups data service found'
-            return data
+            return 'No agent groups data service found'
         return self._get_request_helper(self.services['accountConfigReadOnly_agentGroups'])
