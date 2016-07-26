@@ -9,6 +9,7 @@ class LiveEngageDataApp:
     def __init__(self, account_number: str, keys_and_secrets: Dict[str,str], services: List[str]):
         self.account_number = account_number
         self.keys_and_secrets = keys_and_secrets
+        self.postheader = {'content-type': 'application/json'}
         self.services = {}
         for service in services:
             self.services[service] = ''
@@ -23,6 +24,13 @@ class LiveEngageDataApp:
         print('\n\taccount_number: ' + self.account_number)
         print('\n\tkeys_and_secrets: ' + str(self.keys_and_secrets))
         print('\n\tservices: ' + str(self.services))
+
+    def _get_request_helper(self, url_string: str):
+        req = requests.get(url=url_string, headers=self.postheader, auth=self.oauth)
+        if not req.ok:
+            return 'HTTP Status: ' + str(req.status_code)
+        else:
+            return req.json()
 
     def _set_service_URIs(self):
         for service, URI  in self.services.items():
@@ -48,7 +56,8 @@ class LiveEngageDataApp:
                     URI = 'https://' + domain_req.json()['baseURI'] + '/api/account/' + self.account_number + '/configuration/le-users/skills'
                 elif service == 'accountConfigReadOnly_agentGroups':
                     URI = 'https://' + domain_req.json()['baseURI'] + '/api/account/' + self.account_number + '/configuration/le-users/agentGroups'
-
+                else:
+                    URI = 'Did not understand service name'
             self.services[service] = URI
 
     # Returns a List of Dictionaries that are chat records
@@ -63,7 +72,6 @@ class LiveEngageDataApp:
             offset = 0 # keep track of the amount difference between what we've pulled so far and what the total is.
             limit = 100 # max chats to be recieved in one response
             number_chats = 0
-            postheader = {'content-type': 'application/json'}
             body={
                 'interactive':'true',
                 'ended':'true',
@@ -75,7 +83,7 @@ class LiveEngageDataApp:
             with requests.session() as client:
                 while(offset <= count):
                     params={'offset':offset, 'limit':limit, 'start':'des'}
-                    engHistoryResponse = client.post(url=self.services['engHistDomain'], headers=postheader, data=json.dumps(body), auth=self.oauth, params=params)
+                    engHistoryResponse = client.post(url=self.services['engHistDomain'], headers=self.postheader, data=json.dumps(body), auth=self.oauth, params=params)
                     if not engHistoryResponse.ok:
                         data.append('HTTP Status: ' + str(engHistoryResponse.status_code))
                         return data
@@ -89,6 +97,8 @@ class LiveEngageDataApp:
                 print ('Number of chats processed: ' + str(number_chats) + '\n')
                 return data
 
+    # Returns a Dictionary for the three methods
+    # eg. data['queueHealth'], data['agentactivity'], data['engactivity']
     def get_rt_operational_data(self, minute_timeframe: str, in_buckets_of: str):
         print('\nGetting Real Time Operational Data...')
         data = {}
@@ -100,19 +110,33 @@ class LiveEngageDataApp:
             data['Error'] = 'Buckets must be smaller or equal to timeframe and also a divisor of timeframe.'
             return data
         
-        postheader = {'content-type': 'application/json'}
         params = ''
         for name, URI in self.services['leDataReporting'].items():
             if name == 'queuehealth':
                 params = 'timeframe=' + minute_timeframe + '&interval=' + in_buckets_of + 'skillIds=all&v=1'
             else:
                 params = 'timeframe=' + minute_timeframe + '&interval=' + in_buckets_of + '&skillIds=all&agentIds=all&v=1'
-            req = requests.get(url=(URI + params), headers=postheader, auth=self.oauth)
             
-            if not req.ok:
-                data[name] = 'HTTP Status: ' + str(req.status_code)
-            
-            data[name] = req.json()
+            data[name] = self._get_request_helper(URI + params)
             print('\n\tAdded data from ' + name) 
         return data
-        
+
+    def get_user_data(self):
+        print('\nGetting user data...')
+        if 'accountConfigReadOnly_users' not in self.services.keys():
+            return 'No user data service found'
+        return self._get_request_helper(self.services['accountConfigReadOnly_users'])
+
+    def get_skills_data(self):
+        print('\nGetting skill data...')
+        if 'accountConfigReadOnly_skills' not in self.services.keys():
+            data= 'No skill data service found'
+            return data
+        return self._get_request_helper(self.services['accountConfigReadOnly_skills'])
+    
+    def get_agent_groups_data(self):
+        print('\nGetting agent group data...')
+        if 'accountConfigReadOnly_agentGroups' not in self.services.keys():
+            data= 'No agent groups data service found'
+            return data
+        return self._get_request_helper(self.services['accountConfigReadOnly_agentGroups'])
