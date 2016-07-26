@@ -1,18 +1,17 @@
-import liveengage_api_wrapper.py as le_api
+import liveengage_data_app as le_api
 
-app = le_api.LiveEngageDataApp(account_number='1234',
+app = le_api.LiveEngageDataApp(account_number='xx',
                             keys_and_secrets={
-                                'consumer_key':'fdsafsda'
-                                'consumer_secret':'fdsaf'
-                                'token_key':'fdas'
-                                'token_secret':'fdsa'
+                                'consumer_key':'xx',
+                                'consumer_secret':'xx',
+                                'token_key':'xx',
+                                'token_secret':'xx'
                             },
                             services=[
-                                'engHistDomain',
-                                'leDataReporting',
-                                'accountConfigReadOnly_skills'
+                                'engHistDomain'#,
+                                #'leDataReporting',
+                                #'accountConfigReadOnly_skills'
                             ])
-print(app.services)
-eh_data = app.get_eng_hist_data()
-print(eh_data[0])
-
+# http://www.epochconverter.com/ - grab the millisecond version
+eh_data = app.get_eng_hist_data(from_epoch='1469419200000', to_epoch='1469505599000')
+print(str(eh_data[799]).encode("utf8"))

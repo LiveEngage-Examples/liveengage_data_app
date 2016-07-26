@@ -13,13 +13,17 @@ class LiveEngageDataApp:
         self.services = {}
         for service in services:
             self.services[service] = ''
-        self._set_service_URIs(self.services)
+        self._set_service_URIs()
         self.oauth = OAuth1(keys_and_secrets['consumer_key'],
                client_secret=keys_and_secrets['consumer_secret'],
-               resource_owner_key=keys_and_secrets['access_token'],
-               resource_owner_secret=keys_and_secrets['access_token_secret'],
+               resource_owner_key=keys_and_secrets['token_key'],
+               resource_owner_secret=keys_and_secrets['token_secret'],
                signature_method='HMAC-SHA1',
                signature_type='auth_header')
+        print("\nApp object created with the following data:")
+        print('\taccount_number: ' + self.account_number)
+        print('\tkeys_and_secrets: ' + str(self.keys_and_secrets))
+        print('\tservices: ' + str(self.services))
 
     def _set_service_URIs(self):
         for service, URI  in self.services.items():
@@ -29,7 +33,7 @@ class LiveEngageDataApp:
             else:
                 domain_req = requests.get('https://api.liveperson.net/api/account/' + self.account_number + '/service/' + service + '/baseURI.json?version=1.0')
             if not domain_req.ok:
-                URI = 'Bad Request: ' + str(domainReq.status_code)
+                URI = 'Bad Request: ' + str(domain_req.status_code)
             else:
                 if service == 'engHistDomain':
                     URI = 'https://' + domain_req.json()['baseURI'] + '/interaction_history/api/account/' + self.account_number + '/interactions/search?'
@@ -46,6 +50,7 @@ class LiveEngageDataApp:
 
     # Returns a List of Dictionaries that are chat records
     def get_eng_hist_data(self, from_epoch, to_epoch):
+        print('\nGetting engHistDomain data...')
         data = []
         if 'engHistDomain' not in self.services.keys():
             data.append('No Engagement History service found')
@@ -54,7 +59,6 @@ class LiveEngageDataApp:
             count = 1 # Count is the total num of records in the response
             offset = 0 # offset is to keep track of the amount difference between what we've pulled so far and what the total is.
             limit = 100 # max chats to be recieved in one response
-            num_records = 0
             client = requests.session()
             postheader = {'content-type': 'application/json'}
             # Customize the body for what you want 
@@ -62,19 +66,21 @@ class LiveEngageDataApp:
                 'interactive':'true',
                 'ended':'true',
                 'start':{
-                    # http://www.epochconverter.com/ - grab the millisecond version
                     'from':from_epoch, 
                     'to':to_epoch
                 },
             }
             params={'offset':offset, 'limit':limit, 'start':'des'}
             while(offset <= count):
-                engHistoryResponse = client.post(url=services['engHistDomain'], headers=postheader, data=json.dumps(body), auth=self.oauth, params=params)
+                engHistoryResponse = client.post(url=self.services['engHistDomain'], headers=postheader, data=json.dumps(body), auth=self.oauth, params=params)
                 if not engHistoryResponse.ok:
                     data.append(engHistoryResponse.status_code)
-                    return data
+                    return data[-1]
                 engHistoryResults = engHistoryResponse.json()
-                data.append(engHistoryResults['interactionHistoryRecords'])
+                for chat in engHistoryResults['interactionHistoryRecords']:
+                    data.append(chat)
                 count = engHistoryResults['_metadata']['count']
                 offset += limit
+                print(str(offset) + ' >= ' + str(count))
+            print ('Number of chats processed: ' + str(len(data)))
             return data
