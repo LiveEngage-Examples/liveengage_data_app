@@ -56,12 +56,11 @@ class LiveEngageDataApp:
             data.append('No Engagement History service found')
             return data
         else:
-            count = 1 # Count is the total num of records in the response
-            offset = 0 # offset is to keep track of the amount difference between what we've pulled so far and what the total is.
+            count = 1 # total num of records in the response
+            offset = 0 # keep track of the amount difference between what we've pulled so far and what the total is.
             limit = 100 # max chats to be recieved in one response
-            client = requests.session()
+            number_chats = 0
             postheader = {'content-type': 'application/json'}
-            # Customize the body for what you want 
             body={
                 'interactive':'true',
                 'ended':'true',
@@ -70,17 +69,19 @@ class LiveEngageDataApp:
                     'to':to_epoch
                 },
             }
-            params={'offset':offset, 'limit':limit, 'start':'des'}
-            while(offset <= count):
-                engHistoryResponse = client.post(url=self.services['engHistDomain'], headers=postheader, data=json.dumps(body), auth=self.oauth, params=params)
-                if not engHistoryResponse.ok:
-                    data.append(engHistoryResponse.status_code)
-                    return data[-1]
-                engHistoryResults = engHistoryResponse.json()
-                for chat in engHistoryResults['interactionHistoryRecords']:
-                    data.append(chat)
-                count = engHistoryResults['_metadata']['count']
-                offset += limit
-                print(str(offset) + ' >= ' + str(count))
-            print ('Number of chats processed: ' + str(len(data)))
-            return data
+            with requests.session() as client:
+                while(offset <= count):
+                    params={'offset':offset, 'limit':limit, 'start':'des'}
+                    engHistoryResponse = client.post(url=self.services['engHistDomain'], headers=postheader, data=json.dumps(body), auth=self.oauth, params=params)
+                    if not engHistoryResponse.ok:
+                        data.append('HTTP Status: ' + str(engHistoryResponse.status_code))
+                        return data
+                    engHistoryResults = engHistoryResponse.json()
+                    for chat in engHistoryResults['interactionHistoryRecords']:
+                        number_chats += 1
+                        data.append(chat)
+                    count = engHistoryResults['_metadata']['count']
+                    offset += limit
+                    print(str(offset) + ' <= ' + str(count))
+                print ('Number of chats processed: ' + str(number_chats) + '\n')
+                return data

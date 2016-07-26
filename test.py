@@ -14,4 +14,4 @@ app = le_api.LiveEngageDataApp(account_number='xx',
                             ])
 # http://www.epochconverter.com/ - grab the millisecond version
 eh_data = app.get_eng_hist_data(from_epoch='1469419200000', to_epoch='1469505599000')
-print(str(eh_data[799]).encode("utf8"))
+print(str(eh_data[-1]).encode("utf8"))
