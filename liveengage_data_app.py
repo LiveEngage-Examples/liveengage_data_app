@@ -37,7 +37,11 @@ class LiveEngageDataApp:
                 if service == 'engHistDomain':
                     URI = 'https://' + domain_req.json()['baseURI'] + '/interaction_history/api/account/' + self.account_number + '/interactions/search?'
                 elif service == 'leDataReporting':
-                    URI = 'https://' + domain_req.json()['baseURI']
+                    URIs = {}
+                    URIs['queueHealth'] = 'https://' + domain_req.json()['baseURI'] + '/operations/api/account/' + self.account_number + '/queuehealth?'
+                    URIs['engactivity'] = 'https://' + domain_req.json()['baseURI'] + '/operations/api/account/' + self.account_number + '/engactivity?'
+                    URIs['agentactivity'] = 'https://' + domain_req.json()['baseURI'] + '/operations/api/account/' + self.account_number + '/agentactivity?'
+                    URI = URIs
                 elif service == 'accountConfigReadOnly_users':
                     URI = 'https://' + domain_req.json()['baseURI'] + '/api/account/' + self.account_number + '/configuration/le-users/users'
                 elif service == 'accountConfigReadOnly_skills':
@@ -84,3 +88,31 @@ class LiveEngageDataApp:
                     print(str(offset) + ' <= ' + str(count))
                 print ('Number of chats processed: ' + str(number_chats) + '\n')
                 return data
+
+    def get_rt_operational_data(self, minute_timeframe: str, in_buckets_of: str):
+        print('\nGetting Real Time Operational Data...')
+        data = {}
+        
+        if 'leDataReporting' not in self.services.keys():
+            data['Error'] = 'No Real Time Operational Data service found'
+            return data
+        if int(in_buckets_of) > int(minute_timeframe) or int(minute_timeframe) % int(in_buckets_of) != 0:
+            data['Error'] = 'Buckets must be smaller or equal to timeframe and also a divisor of timeframe.'
+            return data
+        
+        postheader = {'content-type': 'application/json'}
+        params = ''
+        for name, URI in self.services['leDataReporting'].items():
+            if name == 'queuehealth':
+                params = 'timeframe=' + minute_timeframe + '&interval=' + in_buckets_of + 'skillIds=all&v=1'
+            else:
+                params = 'timeframe=' + minute_timeframe + '&interval=' + in_buckets_of + '&skillIds=all&agentIds=all&v=1'
+            req = requests.get(url=(URI + params), headers=postheader, auth=self.oauth)
+            
+            if not req.ok:
+                data[name] = 'HTTP Status: ' + str(req.status_code)
+            
+            data[name] = req.json()
+            print('\n\tAdded data from ' + name) 
+        return data
+        
