@@ -10,8 +10,11 @@ app = le_api.LiveEngageDataApp(account_number='xx',
                             services=[
                                 'engHistDomain'#,
                                 #'leDataReporting',
-                                #'accountConfigReadOnly_skills'
+                                #'accountConfigReadOnly_skills',
+                                #'accountConfigReadOnly_users',
+                                #'accountConfigReadOnly_agentGroups'
                             ])
 # http://www.epochconverter.com/ - grab the millisecond version
 eh_data = app.get_eng_hist_data(from_epoch='1469419200000', to_epoch='1469505599000')
+# Test the eh_data
 print(str(eh_data[-1]).encode("utf8"))

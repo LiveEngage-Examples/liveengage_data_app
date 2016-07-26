@@ -3,7 +3,6 @@
 import json
 import requests
 from requests_oauthlib import OAuth1
-from requests_oauthlib import OAuth1Session
 from typing import Dict, List
 
 class LiveEngageDataApp:
@@ -21,9 +20,9 @@ class LiveEngageDataApp:
                signature_method='HMAC-SHA1',
                signature_type='auth_header')
         print("\nApp object created with the following data:")
-        print('\taccount_number: ' + self.account_number)
-        print('\tkeys_and_secrets: ' + str(self.keys_and_secrets))
-        print('\tservices: ' + str(self.services))
+        print('\n\taccount_number: ' + self.account_number)
+        print('\n\tkeys_and_secrets: ' + str(self.keys_and_secrets))
+        print('\n\tservices: ' + str(self.services))
 
     def _set_service_URIs(self):
         for service, URI  in self.services.items():
