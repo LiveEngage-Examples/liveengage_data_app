@@ -20,8 +20,8 @@ eh_data = app.get_eng_hist_data(from_epoch='1469419200000', to_epoch='1469505599
 print(str(eh_data[-1]).encode('UTF8'))
 
 rt_data = app.get_rt_operational_data(minute_timeframe='60', in_buckets_of='15')
-if data['Error']:
-  print(data['Error'])
+if rt_data['Error']:
+  print(rt_data['Error'])
 
 users_data = app.get_user_data()
 skills_data = app.get_skills_data()
