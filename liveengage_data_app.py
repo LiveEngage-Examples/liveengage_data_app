@@ -3,7 +3,7 @@
 import json
 import requests
 from requests_oauthlib import OAuth1
-from typing import Dict, List
+from typing import Dict, List, Tuple, Any
 
 class LiveEngageDataApp:
     def __init__(self, account_number: str, keys_and_secrets: Dict[str,str], services: List[str]):
@@ -25,12 +25,14 @@ class LiveEngageDataApp:
         print('\n\tkeys_and_secrets: ' + str(self.keys_and_secrets))
         print('\n\tservices: ' + str(self.services))
 
-    def _get_request_helper(self, url_string: str):
+    def _get_request_helper(self, url_string: str) -> Tuple[Any,str]:
         req = requests.get(url=url_string, headers=self.postheader, auth=self.oauth)
+        error = ''
         if not req.ok:
-            return 'HTTP Status: ' + str(req.status_code)
+            error = 'HTTP Status: ' + str(req.status_code)
         else:
-            return req.json()
+            resp = req.json()
+        return (resp, error)
 
     def _set_service_URIs(self):
         for service, URI  in self.services.items():
@@ -63,9 +65,11 @@ class LiveEngageDataApp:
     # Returns a List of Dictionaries that are chat records
     def get_eng_hist_data(self, from_epoch, to_epoch):
         print('\nGetting engHistDomain data...')
-        data = []
+        data = {}
+        data['success'] = []
+        data['errors'] = []
         if 'engHistDomain' not in self.services.keys():
-            data.append('No Engagement History service found')
+            data['errors'].append('No Engagement History service found')
             return data
         else:
             count = 1 # total num of records in the response
@@ -85,59 +89,75 @@ class LiveEngageDataApp:
                     params={'offset':offset, 'limit':limit, 'start':'des'}
                     engHistoryResponse = client.post(url=self.services['engHistDomain'], headers=self.postheader, data=json.dumps(body), auth=self.oauth, params=params)
                     if not engHistoryResponse.ok:
-                        data.append('HTTP Status: ' + str(engHistoryResponse.status_code))
+                        data['errors'].append('HTTP Status: ' + str(engHistoryResponse.status_code))
                         return data
                     engHistoryResults = engHistoryResponse.json()
                     for chat in engHistoryResults['interactionHistoryRecords']:
                         number_chats += 1
-                        data.append(chat)
+                        data['success'].append(chat)
                     count = engHistoryResults['_metadata']['count']
                     offset += limit
-                    print(str(offset) + ' <= ' + str(count))
+                    print(str(offset) + ' <= ' + str(count), end='\r')
                 print ('Number of chats processed: ' + str(number_chats) + '\n')
                 return data
 
     # Returns a Dictionary for the three methods
-    # eg. data['queueHealth'], data['agentactivity'], data['engactivity']
+    # eg. data['success']['queueHealth'], data['success']['agentactivity'], data['success']['engactivity']
     def get_rt_operational_data(self, minute_timeframe: str, in_buckets_of: str):
         print('\nGetting Real Time Operational Data...')
         data = {}
-        
+        data['success'] = {}
+        data['errors'] = []
         if 'leDataReporting' not in self.services.keys():
-            data['Error'] = 'No Real Time Operational Data service found'
+            data['errors'].append('No Real Time Operational Data service found')
             return data
         if int(in_buckets_of) > int(minute_timeframe) or int(minute_timeframe) % int(in_buckets_of) != 0:
-            data['Error'] = 'Buckets must be smaller or equal to timeframe and also a divisor of timeframe.'
+            data['errors'].append('Buckets must be smaller or equal to timeframe and also a divisor of timeframe.')
             return data
-        
         params = ''
         for name, URI in self.services['leDataReporting'].items():
+            data['success'][name] = {}
             if name == 'queuehealth':
                 params = 'timeframe=' + minute_timeframe + '&interval=' + in_buckets_of + 'skillIds=all&v=1'
             else:
                 params = 'timeframe=' + minute_timeframe + '&interval=' + in_buckets_of + '&skillIds=all&agentIds=all&v=1'
             
-            data[name] = self._get_request_helper(URI + params)
-            print('\n\tAdded data from ' + name) 
+            data['success'][name]['success'], data['success'][name]['errors']  = self._get_request_helper(URI + params)
+            print('\tAdded data from ' + name)
         return data
 
     # Returns a Dictionary
     def get_user_data(self):
         print('\nGetting user data...')
+        data = {}
+        data['success'] = {}
+        data['errors'] = []
         if 'accountConfigReadOnly_users' not in self.services.keys():
-            return 'No user data service found'
-        return self._get_request_helper(self.services['accountConfigReadOnly_users'])
+            data['errors'].append('No user data service found')
+            return data
+        data['success'], data['errors'] = self._get_request_helper(self.services['accountConfigReadOnly_users'])
+        return data
 
     # Returns a Dictionary
     def get_skills_data(self):
         print('\nGetting skill data...')
+        data = {}
+        data['success'] = {}
+        data['errors'] = []
         if 'accountConfigReadOnly_skills' not in self.services.keys():
-            return 'No skill data service found'
-        return self._get_request_helper(self.services['accountConfigReadOnly_skills'])
+            data['errors'].append('No skill data service found')
+            return data
+        data['success'], data['errors'] = self._get_request_helper(self.services['accountConfigReadOnly_skills'])
+        return data
 
     # Returns a Dictionary   
     def get_agent_groups_data(self):
         print('\nGetting agent group data...')
+        data = {}
+        data['success'] = {}
+        data['errors'] = []
         if 'accountConfigReadOnly_agentGroups' not in self.services.keys():
-            return 'No agent groups data service found'
-        return self._get_request_helper(self.services['accountConfigReadOnly_agentGroups'])
+            data['errors'].append('No agent groups data service found')
+            return data
+        data['success'], data['errors'] = self._get_request_helper(self.services['accountConfigReadOnly_agentGroups'])
+        return data
