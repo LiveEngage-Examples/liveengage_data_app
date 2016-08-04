@@ -126,12 +126,24 @@ class LiveEngageDataApp:
     # Returns a Dictionary
     def get_user_data(self):
         print('\nGetting user data...')
-        data = {'success': {}, 'errors': []}
+        data = {'success': [], 'errors': []}
+        enriched_data = {'success': [], 'errors': []}
+        num_agents = 0
         if 'accountConfigReadOnly_users' not in self.services.keys():
             data['errors'].append('No user data service found')
             return data
         data['success'], data['errors'] = self._get_request_helper(self.services['accountConfigReadOnly_users'])
-        return data
+        if data['errors']:
+            return data
+        for agent in data['success']:
+            success, error = self._get_request_helper(self.services['accountConfigReadOnly_users'] + '/' + str(agent['id']))
+            if error:
+                enriched_data['errors'].append(error)
+            else:
+                enriched_data['success'].append(success)
+            num_agents += 1
+            print('Processed ' + str(num_agents), end='\r')
+        return enriched_data
 
     # Returns a Dictionary
     def get_skills_data(self):
