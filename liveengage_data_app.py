@@ -10,9 +10,7 @@ class LiveEngageDataApp:
         self.account_number = account_number
         self.keys_and_secrets = keys_and_secrets
         self.postheader = {'content-type': 'application/json'}
-        self.services = {}
-        for service in services:
-            self.services[service] = ''
+        self.services = {service : '' for service in services}
         self._set_service_URIs()
         self.oauth = OAuth1(keys_and_secrets['consumer_key'],
                client_secret=keys_and_secrets['consumer_secret'],
@@ -20,10 +18,13 @@ class LiveEngageDataApp:
                resource_owner_secret=keys_and_secrets['token_secret'],
                signature_method='HMAC-SHA1',
                signature_type='auth_header')
-        print("\nApp object created with the following data:")
-        print('\n\taccount_number: ' + self.account_number)
-        print('\n\tkeys_and_secrets: ' + str(self.keys_and_secrets))
-        print('\n\tservices: ' + str(self.services))
+
+    def __str__(self):
+        string_rep = '\nApp object with the following data:'
+        string_rep += '\n\taccount_number: ' + self.account_number
+        string_rep += '\n\tkeys_and_secrets: ' + str(self.keys_and_secrets)
+        string_rep += '\n\tservices: ' + str(self.services)
+        return string_rep
 
     def _get_request_helper(self, url_string: str) -> Tuple[Any,str]:
         req = requests.get(url=url_string, headers=self.postheader, auth=self.oauth)
@@ -65,9 +66,7 @@ class LiveEngageDataApp:
     # Returns a List of Dictionaries that are chat records
     def get_eng_hist_data(self, from_epoch, to_epoch):
         print('\nGetting engHistDomain data...')
-        data = {}
-        data['success'] = []
-        data['errors'] = []
+        data = {'success': [], 'errors': []}
         if 'engHistDomain' not in self.services.keys():
             data['errors'].append('No Engagement History service found')
             return data
@@ -105,9 +104,7 @@ class LiveEngageDataApp:
     # eg. data['success']['queueHealth'], data['success']['agentactivity'], data['success']['engactivity']
     def get_rt_operational_data(self, minute_timeframe: str, in_buckets_of: str):
         print('\nGetting Real Time Operational Data...')
-        data = {}
-        data['success'] = {}
-        data['errors'] = []
+        data = {'success': {}, 'errors': []}
         if 'leDataReporting' not in self.services.keys():
             data['errors'].append('No Real Time Operational Data service found')
             return data
@@ -129,9 +126,7 @@ class LiveEngageDataApp:
     # Returns a Dictionary
     def get_user_data(self):
         print('\nGetting user data...')
-        data = {}
-        data['success'] = {}
-        data['errors'] = []
+        data = {'success': {}, 'errors': []}
         if 'accountConfigReadOnly_users' not in self.services.keys():
             data['errors'].append('No user data service found')
             return data
@@ -141,9 +136,7 @@ class LiveEngageDataApp:
     # Returns a Dictionary
     def get_skills_data(self):
         print('\nGetting skill data...')
-        data = {}
-        data['success'] = {}
-        data['errors'] = []
+        data = {'success': {}, 'errors': []}
         if 'accountConfigReadOnly_skills' not in self.services.keys():
             data['errors'].append('No skill data service found')
             return data
@@ -153,9 +146,7 @@ class LiveEngageDataApp:
     # Returns a Dictionary   
     def get_agent_groups_data(self):
         print('\nGetting agent group data...')
-        data = {}
-        data['success'] = {}
-        data['errors'] = []
+        data = {'success': {}, 'errors': []}
         if 'accountConfigReadOnly_agentGroups' not in self.services.keys():
             data['errors'].append('No agent groups data service found')
             return data
