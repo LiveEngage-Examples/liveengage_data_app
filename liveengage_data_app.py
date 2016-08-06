@@ -116,6 +116,8 @@ class LiveEngageDataApp:
             data['success'][name] = {}
             if name == 'queuehealth':
                 params = 'timeframe=' + minute_timeframe + '&interval=' + in_buckets_of + 'skillIds=all&v=1'
+            elif name == 'agentactivity':
+                params = 'timeframe=' + minute_timeframe + '&interval=' + in_buckets_of + '&agentIds=all&v=1'
             else:
                 params = 'timeframe=' + minute_timeframe + '&interval=' + in_buckets_of + '&skillIds=all&agentIds=all&v=1'
             
@@ -135,14 +137,18 @@ class LiveEngageDataApp:
         data['success'], data['errors'] = self._get_request_helper(self.services['accountConfigReadOnly_users'])
         if data['errors']:
             return data
-        for agent in data['success']:
-            success, error = self._get_request_helper(self.services['accountConfigReadOnly_users'] + '/' + str(agent['id']))
-            if error:
-                enriched_data['errors'].append(error)
-            else:
-                enriched_data['success'].append(success)
-            num_agents += 1
-            print('Processed ' + str(num_agents), end='\r')
+        with requests.session() as client:
+            for agent in data['success']:
+                url_string = self.services['accountConfigReadOnly_users'] + '/' + str(agent['id'])
+                req = client.get(url=url_string, headers=self.postheader, auth=self.oauth)
+                error = ''
+                if not req.ok:
+                    enriched_data['errors'].append('HTTP Status: ' + str(req.status_code))
+                else:
+                    enriched_data['success'].append(req.json())
+                num_agents += 1
+                print('Processed ' + str(num_agents), end='\r')
+        print('')
         return enriched_data
 
     # Returns a Dictionary
