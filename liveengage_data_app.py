@@ -21,9 +21,16 @@ class LiveEngageDataApp:
 
     def __str__(self):
         string_rep = '\nApp object with the following data:'
-        string_rep += '\n\taccount_number: ' + self.account_number
-        string_rep += '\n\tkeys_and_secrets: ' + str(self.keys_and_secrets)
-        string_rep += '\n\tservices: ' + str(self.services)
+        string_rep += '\n  account_number: ' + self.account_number
+        for name, token in self.keys_and_secrets.items():
+            string_rep += '\n  ' + name + ' : ' + token
+        for service, URI in self.services.items():
+            string_rep += '\n  ' + service + ' : '
+            if isinstance(URI, dict):
+                for s, u in URI.items():
+                    string_rep += '\n    ' + s + ' : ' + u
+            else:
+                string_rep += URI
         return string_rep
 
     def _get_request_helper(self, url_string: str) -> Tuple[Any,str]:
@@ -97,7 +104,8 @@ class LiveEngageDataApp:
                     count = engHistoryResults['_metadata']['count']
                     offset += limit
                     print(str(offset) + ' <= ' + str(count), end='\r')
-                print ('Number of chats processed: ' + str(number_chats) + '\n')
+                print ('Chats Processed: ' + str(number_chats), end='\r')
+                print('')
                 return data
 
     # Returns a Dictionary for the three methods
@@ -147,7 +155,7 @@ class LiveEngageDataApp:
                 else:
                     enriched_data['success'].append(req.json())
                 num_agents += 1
-                print('Processed ' + str(num_agents), end='\r')
+                print('Users Processed ' + str(num_agents), end='\r')
         print('')
         return enriched_data
 
