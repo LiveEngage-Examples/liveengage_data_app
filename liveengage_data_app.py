@@ -4,8 +4,10 @@ import json
 import requests
 from requests_oauthlib import OAuth1
 from typing import Dict, List, Tuple, Any
+import validictory
 
 class LiveEngageDataApp:
+    
     def __init__(self, account_number: str, keys_and_secrets: Dict[str,str], services: List[str]):
         self.account_number = account_number
         self.keys_and_secrets = keys_and_secrets
@@ -36,6 +38,7 @@ class LiveEngageDataApp:
     def _get_request_helper(self, url_string: str) -> Tuple[Any,str]:
         req = requests.get(url=url_string, headers=self.postheader, auth=self.oauth)
         error = ''
+        resp = {}
         if not req.ok:
             error = 'HTTP Status: ' + str(req.status_code)
         else:
@@ -100,7 +103,11 @@ class LiveEngageDataApp:
                     engHistoryResults = engHistoryResponse.json()
                     for chat in engHistoryResults['interactionHistoryRecords']:
                         number_chats += 1
-                        data['success'].append(chat)
+                        try:
+                            validictory.validate(chat, _transcript_schema)
+                            data['success'].append(chat)
+                        except ValueError as ve:
+                            data['errors'].append(str(ve))
                     count = engHistoryResults['_metadata']['count']
                     offset += limit
                     print(str(offset) + ' <= ' + str(count), end='\r')
@@ -178,3 +185,11 @@ class LiveEngageDataApp:
             return data
         data['success'], data['errors'] = self._get_request_helper(self.services['accountConfigReadOnly_agentGroups'])
         return data
+
+    _transcript_schema = {
+        "type" : "object",
+        "properties" : {
+            "price" : {"type" : "number"},
+            "name" : {"type" : "string"},
+        },
+    }
