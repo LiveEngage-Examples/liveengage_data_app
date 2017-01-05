@@ -4,7 +4,6 @@ import json
 import requests
 from requests_oauthlib import OAuth1
 from typing import Dict, List, Tuple, Any
-import validictory
 
 class LiveEngageDataApp:
     
@@ -185,11 +184,3 @@ class LiveEngageDataApp:
             return data
         data['success'], data['errors'] = self._get_request_helper(self.services['accountConfigReadOnly_agentGroups'])
         return data
-
-    _transcript_schema = {
-        "type" : "object",
-        "properties" : {
-            "price" : {"type" : "number"},
-            "name" : {"type" : "string"},
-        },
-    }
