@@ -29,11 +29,11 @@ app = LiveEngageDataApp(account_number='xx',
                             'token_secret':'xx'
                         },
                         services=[
-                            'engHistDomain',
+                            #'engHistDomain',
                             'leDataReporting',
                             'accountConfigReadOnly_skills',
-                            'accountConfigReadOnly_users',
-                            'accountConfigReadOnly_agentGroups'
+                            #'accountConfigReadOnly_users',
+                            #'accountConfigReadOnly_agentGroups'
                         ])
 print(str(app))
 
