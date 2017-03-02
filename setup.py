@@ -8,4 +8,8 @@ setup(name='liveengage_data_app',
       author_email='',
       license='MIT',
       packages=['liveengage_data_app'],
+      install_requires=[
+          'requests',
+          'requests_oauthlib',
+      ],
       zip_safe=False)
