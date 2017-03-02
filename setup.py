@@ -1,5 +1,9 @@
 from setuptools import setup
 
+def readme():
+    with open('README.md') as f:
+        return f.read()
+
 setup(name='liveengage_data_app',
       version='0.1',
       description='Unofficial wrapper for LiveEngage data APIs',
