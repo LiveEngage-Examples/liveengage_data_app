@@ -25,7 +25,6 @@ setup(name='liveengage_data_app',
 
           # Indicate who your project is intended for
           'Intended Audience :: Developers',
-          'Topic :: Software Development :: API Wrapper',
 
           # Pick your license as you wish (should match "license" above)
           'License :: OSI Approved :: MIT License',
