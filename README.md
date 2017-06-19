@@ -1,3 +1,7 @@
+No longer actively maintained. AFAIK, this still works just fine, but see the new developer site for more API information: 
+
+https://developers.liveperson.com/documents.html
+
 # LiveEngageDataApp
 A small, *unofficial* wrapper for LiveEngage data retrieval APIs
 
