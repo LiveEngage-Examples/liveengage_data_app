@@ -1,7 +1,6 @@
 from liveengage_data_app import LiveEngageDataApp
 from collections import Counter
 
-
 app = LiveEngageDataApp(account_number='xx',
                         keys_and_secrets={
                             'consumer_key':'xx',
@@ -28,7 +27,6 @@ for transcript in eh_data['success']:
         countries[transcript['visitorInfo']['country']] += 1
     except KeyError:
         countries['N/A'] += 1
-	
 
 total_countries = sum(countries.values())
 for country, count in countries.items():
